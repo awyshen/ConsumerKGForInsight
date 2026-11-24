@@ -1,0 +1,12 @@
+{
+  "synthetic_only": true,
+  "evaluation_type": "in-distribution template-based baseline (not real-world accuracy)",
+  "samples": 1200,
+  "tp": 2250,
+  "fp": 0,
+  "fn": 0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "errors": []
+}

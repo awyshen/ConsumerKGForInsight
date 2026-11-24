@@ -1,0 +1,86 @@
+version: 1.1.0
+design_reference: 手机消费者洞察系统_领域本体与知识图谱详细设计规范V1.0.md
+entity_types:
+  - Consumer
+  - ConsumerSegment
+  - Market
+  - Brand
+  - Product
+  - ProductModel
+  - ProductVariant
+  - Feature
+  - SellingPoint
+  - Need
+  - UsageScenario
+  - Channel
+relations:
+  OWNS: {from: [Brand], to: [Product, ProductModel, ProductVariant]}
+  HAS_FEATURE: {from: [Product, ProductModel, ProductVariant], to: [Feature]}
+  PROMOTES: {from: [Product, ProductModel, ProductVariant], to: [SellingPoint]}
+  BASED_ON: {from: [SellingPoint], to: [Feature]}
+  SUPPORTS: {from: [Feature], to: [Need]}
+  APPEALS_TO: {from: [SellingPoint], to: [ConsumerSegment]}
+  BELONGS_TO: {from: [Consumer], to: [ConsumerSegment]}
+  HAS_NEED: {from: [Consumer, ConsumerSegment], to: [Need]}
+  USES: {from: [Consumer], to: [Product, ProductModel, ProductVariant]}
+  LOCATED_IN: {from: [Consumer], to: [Market]}
+  USES_IN: {from: [Consumer], to: [UsageScenario]}
+  OCCURS_IN:
+    from: [Need, Consumer, ConsumerSegment]
+    to: [UsageScenario, Market]
+    variants:
+      - {from: [Need], to: [UsageScenario]}
+      - {from: [Consumer, ConsumerSegment], to: [Market]}
+  TARGETS: {from: [Product, ProductModel, ProductVariant], to: [ConsumerSegment]}
+  # Compatibility relations remain valid in SQL; projection uses the static policy below.
+  COMMUNICATES: {from: [Product, ProductModel, Brand], to: [SellingPoint]}
+  ADDRESSES: {from: [Feature, SellingPoint], to: [Need]}
+  RESPONDS_TO: {from: [Consumer, ConsumerSegment], to: [SellingPoint]}
+  CONSIDERS: {from: [Consumer], to: [ProductModel]}
+  PURCHASED: {from: [Consumer], to: [ProductModel]}
+  AVAILABLE_THROUGH: {from: [ProductModel], to: [Channel]}
+  PARENT_OF:
+    from: [Need, Feature]
+    to: [Need, Feature]
+    variants:
+      - {from: [Need], to: [Need]}
+      - {from: [Feature], to: [Feature]}
+event_relations:
+  # R14-R18: event/fact layer, not core graph nodes or permanent semantic edges.
+  THROUGH: {from: [PurchaseEvent], to: [Channel]}
+  OCCURS_IN: {from: [PurchaseEvent], to: [Market]}
+  SELECTS: {from: [PurchaseEvent], to: [Product]}
+  CONSIDERS: {from: [PurchaseEvent], to: [Product]}
+  INFLUENCED_BY: {from: [PurchaseEvent], to: [SellingPoint]}
+projection:
+  version: static-core-v1
+  static_relations: [OWNS, HAS_FEATURE, PROMOTES, BASED_ON, SUPPORTS, OCCURS_IN, PARENT_OF]
+  sql_only: [Evidence, Claim, InteractionEvent, Segment, ReviewTask, AnalysisSession, AnalysisRun, InsightArtifact]
+  consumer_fields: [entity_id, anonymous_name, status, ontology_version]
+  controlled_segment: stable_business_definition
+display_names:
+  Battery endurance: 电池续航
+  Camera quality: 影像体验
+  Affordable price: 价格与预算
+  Gaming performance: 游戏性能
+  Storage capacity: 存储容量
+  Charging speed: 充电速度
+  Durability: 耐用性
+  Connectivity: 网络连接
+  Display quality: 屏幕体验
+  Privacy and security: 隐私与安全
+  Long-life battery: 长续航电池
+  Night photography: 夜景摄影
+  Value for money: 高性价比
+  High-refresh display: 高刷新率屏幕
+  Expandable storage: 可扩展存储
+  Fast charging: 快速充电
+  Water resistance: 防水能力
+  5G connectivity: 5G 连接
+  Outdoor brightness: 户外亮度
+  Biometric security: 生物识别安全
+  120Hz refresh display: 120Hz 高刷屏
+  Efficient gaming chipset: 高效游戏芯片
+  Large battery capacity: 大容量电池
+  Fast charging support: 快充技术
+  Optical image stabilization: 光学防抖

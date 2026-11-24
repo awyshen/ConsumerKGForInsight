@@ -1,0 +1,26 @@
+data/graph_backups/
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Node/前端
+node_modules/
+dist/
+.vite/
+.DS_Store
+
+# IDE/系统
+.idea/
+.vscode/
+
+# tools
+.agents/
+.aws/
+.codex.
+.pytest_cache/
+.ruff_cache/
+consumer_knowledge_graph.egg-info/
+test_consumer_kg.db

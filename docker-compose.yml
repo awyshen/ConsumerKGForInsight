@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kg
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: kg
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kg -d kg"]
+      interval: 5s
+      retries: 20
+  neo4j:
+    image: neo4j:5.26-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env}
+    volumes: ["neo4jdata:/data"]
+    ports: ["7474:7474", "7687:7687"]
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env}", "RETURN 1"]
+      interval: 10s
+      retries: 20
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment: &migrate_env
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://kg:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/kg
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+  api:
+    build: .
+    environment: &api_env
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://kg:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/kg
+      NEO4J_ENABLED: "true"
+      NEO4J_WSL_BRIDGE: "disabled"
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env}
+      API_KEY: ${API_KEY:?Set API_KEY in .env}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:?Set ADMIN_API_KEY in .env}
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://example.invalid/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-your-model}
+      AGENT_THINKING: ${AGENT_THINKING:-auto}
+      AGENT_PARALLEL_TOOLS: ${AGENT_PARALLEL_TOOLS:-true}
+      AGENT_MAX_TOOL_CALLS: ${AGENT_MAX_TOOL_CALLS:-6}
+      AGENT_LLM_TIMEOUT_SECONDS: ${AGENT_LLM_TIMEOUT_SECONDS:-120}
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      neo4j: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+    restart: unless-stopped
+  graph-worker:
+    build: .
+    command: ["python", "-m", "scripts.graph_worker"]
+    environment: *api_env
+    depends_on:
+      postgres: {condition: service_healthy}
+      neo4j: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+    restart: unless-stopped
+volumes:
+  pgdata:
+  neo4jdata:
